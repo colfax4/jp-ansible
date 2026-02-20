@@ -1,0 +1,14 @@
+.venv/
+.secrets/
+
+# !.ansible/*
+.ansible/*
+!.ansible/.gitkeep
+!.ansible/roles/
+.ansible/roles/*
+!.ansible/roles/.gitkeep
+!.ansible/collections/
+.ansible/collections/*
+!.ansible/collections/.gitkeep
+
+fact_cache/

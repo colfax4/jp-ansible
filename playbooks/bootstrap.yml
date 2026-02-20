@@ -1,0 +1,94 @@
+---
+
+- hosts: localhost
+  vars_prompt:
+  - name: target_hosts
+    prompt: |
+      Enter Target Host IP[s] or Hostname[s] (comma separated)
+      (example:  1.1.1.1,myhost.example.com)
+    private: false
+
+  - name: username
+    prompt: |
+      Enter Target Host[s] Login Username.
+      You should have already configured ssh public key authentication with this user!
+    private: false
+
+  - name: become_password
+    prompt: Enter sudo password (leave blank if not required)
+    private: true
+    default: ""
+
+  tasks:
+  - name: Add target hosts to dynamic group
+    add_host:
+      name: "{{ item }}"
+      groups: bootstrap_group
+    with_items: "{{ target_hosts.split(',') }}"
+
+  - name: Save auth vars to 'login' hostvars
+    add_host:
+      name: login
+      username: "{{ username }}"
+      auth_method: key
+      become_password: "{{ become_password | default('') }}"
+
+- hosts: bootstrap_group
+  remote_user: "{{ hostvars['login']['username'] }}"
+  vars:
+    ansible_become: yes
+    ansible_become_method: sudo
+    ansible_become_pass: "{{ hostvars['login']['become_password'] if hostvars['login']['become_password'] | length > 0 else omit }}"
+  tasks:
+    - name: Ensure wheel group exists
+      become: true
+      group:
+        name: wheel
+        state: present
+
+    - name: Create ansible user
+      become: true
+      user:
+        name: 'ansible'
+        comment: 'Ansible automation user'
+        shell: /bin/bash
+        groups: 'wheel'
+        append: yes
+
+    - name: Sudo without password for wheel group
+      become: true
+      copy:
+        content: '%wheel ALL=(ALL:ALL) NOPASSWD:ALL'
+        dest: /etc/sudoers.d/wheel_nopasswd
+        mode: 0440
+
+    - name: Add authorized key for ansible user
+      become: true
+      authorized_key:
+        user: ansible
+        key: "{{ item }}"
+      with_file:
+        - ../files/ansible.pub 
+
+    - name: Disallow jp-user from sudo without password
+      become: true
+      copy:
+        content: '#jp-user ALL=(ALL:ALL) NOPASSWD:ALL'
+        dest: /etc/sudoers.d/010_pi-nopasswd
+        mode: 0440
+
+    - name: Remove jp-user from sudo group
+      become: true
+      command: "gpasswd -d jp-user sudo"
+      register: command_result
+      changed_when: "not 'is not a member of' in command_result.stderr"
+      failed_when: false
+
+    - name: Update apt-get repo and cache
+      become: true
+      apt: update_cache=yes cache_valid_time=3600
+
+    - name: Upgrade all apt packages
+      become: true
+      apt: 
+        upgrade: dist
