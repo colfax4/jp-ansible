@@ -1,0 +1,23 @@
+---
+
+- hosts: classrooms
+  tasks:
+    - name: Update apt repo and cache
+      become: true
+      apt: update_cache=yes cache_valid_time=3600
+
+    - name: Install packages
+      become: true
+      apt:
+        pkg:
+          - vim
+          - xrdp
+
+    - name: Set up cron job to keep system up-to-date
+      become: true
+      ansible.builtin.cron:
+        name: Update and upgrade apt packages
+        minute: "00"
+        hour: "2"
+        weekday: "2"
+        job: "apt update -q -y && apt dist-upgrade -q -y"

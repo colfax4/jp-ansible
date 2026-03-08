@@ -1,0 +1,18 @@
+---
+
+- hosts: classrooms
+  remote_user: jp-user
+  vars:
+    bg_image: more_than_conquerors.png
+    bg_image_dest: /home/jp-user/Pictures
+    ansible_ssh_private_key_file: .secrets/id_jp-user
+  tasks:
+    - name: Copy background image
+      ansible.builtin.copy:
+        src: "../files/{{ bg_image }}"
+        dest: "{{ bg_image_dest }}/{{ bg_image }}"
+
+    - name: Set background image
+      shell: "pcmanfm --set-wallpaper {{ bg_image_dest }}/{{ bg_image }}"
+      environment:
+        DISPLAY: ":0"

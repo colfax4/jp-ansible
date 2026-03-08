@@ -68,7 +68,15 @@
         user: ansible
         key: "{{ item }}"
       with_file:
-        - ../files/ansible.pub 
+        - ../files/ansible.pub
+
+    - name: Add authorized key for jp-user user
+      become: true
+      authorized_key:
+        user: jp-user
+        key: "{{ item }}"
+      with_file:
+        - ../files/id_jp-user.pub
 
     - name: Disallow jp-user from sudo without password
       become: true

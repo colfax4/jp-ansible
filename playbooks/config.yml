@@ -1,0 +1,6 @@
+---
+
+- import_playbook: base-config.yml
+- import_playbook: wallpaper.yml
+- import_playbook: bootsplash.yml
+- import_playbook: app-config.yml

@@ -1,0 +1,8 @@
+---
+
+- hosts: classrooms
+  vars:
+    node_exporter_arch: 'arm64'
+  become: true
+  roles:
+    - role: geerlingguy.node_exporter

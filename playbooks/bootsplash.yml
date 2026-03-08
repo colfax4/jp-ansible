@@ -1,0 +1,20 @@
+---
+
+- hosts: classrooms
+  vars:
+    bootsplash_src: "../files/jp_classroom_bootsplash.png"
+    bootsplash_path: "/usr/share/plymouth/themes/pix"
+    bootsplash_dest: "splash.png"
+  tasks:
+   - name: Install modified bootsplash file
+     become: true
+     ansible.builtin.copy:
+       src: "{{ bootsplash_src }}"
+       dest: "{{ bootsplash_path }}/{{ bootsplash_dest }}"
+       backup: yes
+
+   - name: Re-install Plymouth theme
+     become: true
+     ansible.builtin.shell: "plymouth-set-default-theme -R pix"
+     register: command_out
+     failed_when: command_out.rc != 0

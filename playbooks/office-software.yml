@@ -1,0 +1,34 @@
+---
+
+- hosts: classrooms
+  vars:
+    google_drive_file_id: "1KWfrhn9y33zGUnv1GI9u2cHinug9pyE8"
+    onlyoffice_deb: onlyoffice-desktopeditors_arm64.deb
+    dest_deb: "/tmp/{{ onlyoffice_deb }}"
+    venv_path: "/tmp/gdown/venv"
+  tasks:
+    - name: Install virtualenv
+      become: true
+      ansible.builtin.apt:
+        pkg:
+          - python3-virtualenv
+
+    - name: Install gdown using pip within virtualenv
+      become: true
+      ansible.builtin.pip:
+        name: gdown
+        state: present
+        virtualenv: "{{ venv_path }}" # Absolute path to the venv
+
+    - name: Download the Google Drive file using gdown
+      ansible.builtin.command:
+        # Example command using file ID and output path
+        cmd: "{{ venv_path }}/bin/gdown --id {{ google_drive_file_id }} -O {{ dest_deb }}"
+      register: gdown_download_result
+      changed_when: gdown_download_result.rc != 0 # Indicates a change if the command fails (or adjust based on need)
+
+    - name: Install Only Office
+      become: true
+      ansible.builtin.apt:
+        deb: "{{ dest_deb }}"
+

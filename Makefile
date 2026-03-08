@@ -15,3 +15,9 @@ ping:
 
 bootstrap: 
 	$(ANSIBLE_PLAYBOOK) playbooks/bootstrap.yml
+
+config:
+	$(ANSIBLE_PLAYBOOK) --ssh-extra-args '-o ForwardX11=yes' playbooks/config.yml
+
+software:
+	$(ANSIBLE_PLAYBOOK) playbooks/software.yml
